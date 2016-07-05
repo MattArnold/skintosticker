@@ -1,6 +1,8 @@
-import os
 from app import app#, SkinToSticker
 from flask import request
+import os, base64, json
+from PIL import Image
+from cStringIO import StringIO
 
 @app.route('/')
 def root():
@@ -27,3 +29,27 @@ def receive_skin():
         fh.close()
 
     return ('Success', 201)
+
+@app.route('/orders', methods=['GET'])
+def list_orders():
+    skinlist = os.listdir('app/static/skins')
+    responses = []
+    for fn in skinlist:
+    	withextension = fn.split('.')
+    	nonextension = withextension[0]
+    	metadata = nonextension.split('_')
+        order = {}
+        order['fn'] = fn
+        order['id'] = metadata[0]
+        order['dt'] = metadata[1]
+        order['item'] = metadata[2]
+        skin = Image.open('app/static/skins/' + fn)
+
+        output = StringIO()
+        skin.save(output, format='PNG')
+        im_data = output.getvalue()
+        imgstr = 'data:image/png;base64,' + base64.b64encode(im_data)
+
+        order['img'] = imgstr
+        responses.append(order)
+    return json.dumps(responses)

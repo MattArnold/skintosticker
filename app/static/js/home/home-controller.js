@@ -1,8 +1,16 @@
 angular.module('skintosticker')
-  .controller('HomeController', ['$scope', function ($scope) {
+  .controller('HomeController', ['$scope', '$http', function ($scope, $http) {
   	$scope.orders = {};
-    var ordersResponsePromise = $http.get('/admin/orders.json?=id,created_at,line_items');
+  	$scope.test = 'Test!';
+    // var ordersResponsePromise = $http.get('/admin/orders.json?=id,created_at,line_items');
+    var ordersResponsePromise = $http.get('/orders');
     ordersResponsePromise.success(function(data) {
-      $scope.orders = data.orders;
-    }
+      // angular.forEach(data, function(data){
+      // 	//Decode a base64 string to an image
+      //   var image = new Image();
+      //   image.src = data.img;
+      //   data.img = image;
+      // });
+      $scope.orders = data;
+    });
   }]);

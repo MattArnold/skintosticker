@@ -1,11 +1,10 @@
 <div class="container-fluid">
-    <div class="row">
-        <div class="col-md-8">
-          <p class="lead">Soon this will show sticker images.</p>
-          <div ng-repeat="order in orders">
-            <span>ID: {{order.id}}</span>
-            <span>created at: {{order.created_at}}</span>
-          </div>
-        </div>
-    </div>
+	<div class="row">
+		<div class="col-md-8">
+			<div ng-repeat="order in orders">
+				<span> <strong>Item</strong> {{order.item}} <strong>from Order</strong> {{order.id}} <strong>placed on</strong> {{order.dt}} </span>
+				<img data-ng-src="{{order.img}}"/>
+			</div>
+		</div>
+	</div>
 </div>
