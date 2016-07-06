@@ -1,4 +1,4 @@
-from app import app#, SkinToSticker
+from app import app, SkinToSticker
 from flask import request
 import os, base64, json
 from PIL import Image
@@ -24,9 +24,18 @@ def receive_skin():
     	fname = '%s_%s_%d.png' % (order_id, dt, i)
         properties = item['properties']
         skin = properties[0]['uploadedskin']
-        fh = open(os.path.join(app.config['SKINS_FOLDER'], fname), 'wb')
-        fh.write(skin.decode('base64'))
+        skinpath = os.path.join(app.config['SKINS_FOLDER'], fname)
+
+        # Back up the original skin
+        fh = open(skinpath, 'wb')
+        writtenfile = fh.write(skin.decode('base64'))
         fh.close()
+
+        # Turn tge skin into a sticker and save it
+        skinimg = Image.open(skinpath)
+        sticker = SkinToSticker.stickerify(skinimg)
+        stickerpath = os.path.join(app.config['STICKERS_FOLDER'], fname)
+        sticker.save(stickerpath,"PNG")
 
     return ('Success', 201)
 
