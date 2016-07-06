@@ -52,13 +52,20 @@ def list_orders():
         order['id'] = metadata[0]
         order['dt'] = metadata[1]
         order['item'] = metadata[2]
+
         skin = Image.open('app/static/skins/' + fn)
+        skin_output = StringIO()
+        skin.save(skin_output, format='PNG')
+        skin_im_data = skin_output.getvalue()
+        skin_img_str = 'data:image/png;base64,' + base64.b64encode(skin_im_data)
+        order['skin'] = skin_img_str
 
-        output = StringIO()
-        skin.save(output, format='PNG')
-        im_data = output.getvalue()
-        imgstr = 'data:image/png;base64,' + base64.b64encode(im_data)
+        sticker = Image.open('app/static/stickers/' + fn)
+        sticker_output = StringIO()
+        sticker.save(sticker_output, format='PNG')
+        sticker_im_data = sticker_output.getvalue()
+        sticker_img_str = 'data:image/png;base64,' + base64.b64encode(sticker_im_data)
+        order['sticker'] = sticker_img_str
 
-        order['img'] = imgstr
         responses.append(order)
     return json.dumps(responses)
