@@ -8,6 +8,10 @@ from cStringIO import StringIO
 def root():
     return app.send_static_file('index.html')
 
+@app.route('/paths', methods=['GET'])
+def getpaths():
+    return "%s %s" % (app.config['SKINS_FOLDER'], app.config['STICKERS_FOLDER'])
+
 @app.route('/stickerify', methods=['GET', 'POST'])
 def receive_skin():
     if not request.json:
