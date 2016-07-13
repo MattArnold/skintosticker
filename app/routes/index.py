@@ -17,29 +17,39 @@ def receive_skin():
     if not request.json:
         abort(400)
 
-    order_id = request.json['id']
-    dt = request.json['created_at']
-    dt.replace(':', '-')
+    if request.json['id']:
+        order_id = request.json['id']
+    else:
+        order_id = 'no order id'
+
+    if request.json['created_at']:
+        dt = request.json['created_at']
+        dt.replace(':', '-')
+    else:
+        dt = 'no datetime'
+
     i = 0
+    if request.json['line_items']:
+        line_items = request.json['line_items']
+        for item in line_items:
+            i += 1
+            fname = '%s_%s_%d.png' % (order_id, dt, i)
+            properties = item['properties']
+            skin = properties[0]['uploadedskin']
+            skinpath = os.path.join(app.config['SKINS_FOLDER'], fname)
 
-    line_items = request.json['line_items']
-    for item in line_items:
-    	i += 1
-    	fname = '%s_%s_%d.png' % (order_id, dt, i)
-        properties = item['properties']
-        skin = properties[0]['uploadedskin']
-        skinpath = os.path.join(app.config['SKINS_FOLDER'], fname)
+            # Back up the original skin
+            fh = open(skinpath, 'wb')
+            writtenfile = fh.write(skin.decode('base64'))
+            fh.close()
 
-        # Back up the original skin
-        fh = open(skinpath, 'wb')
-        writtenfile = fh.write(skin.decode('base64'))
-        fh.close()
-
-        # Turn tge skin into a sticker and save it
-        skinimg = Image.open(skinpath)
-        sticker = SkinToSticker.stickerify(skinimg)
-        stickerpath = os.path.join(app.config['STICKERS_FOLDER'], fname)
-        sticker.save(stickerpath,"PNG")
+            # Turn the skin into a sticker and save it
+            skinimg = Image.open(skinpath)
+            sticker = SkinToSticker.stickerify(skinimg)
+            stickerpath = os.path.join(app.config['STICKERS_FOLDER'], fname)
+            sticker.save(stickerpath,"PNG")
+    else:
+        line_items = 'no line items'
 
     return ('Success', 201)
 
