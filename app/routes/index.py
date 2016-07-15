@@ -40,7 +40,10 @@ def receive_skin():
             i += 1
             fname = '%s_%s_%d.png' % (order_id, dt, i)
             properties = item['properties']
-            skin = properties[0]['value'][22:] # properties[0] will be the skin
+            skin = properties[0]['value'][15:] # properties[0] will be the skin
+            skinlog = open('/home/skin/skintosticker/skinlog.txt', 'w')
+            skinlog.write('%s\n' % (skin))
+            skinlog.close()
             skinpath = os.path.join(app.config['SKINS_FOLDER'], fname)
 
             # Back up the original skin
