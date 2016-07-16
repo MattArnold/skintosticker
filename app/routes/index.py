@@ -14,13 +14,8 @@ def getpaths():
 
 @app.route('/stickerify', methods=['GET', 'POST'])
 def receive_skin():
-
     if not request.json:
         abort(400)
-
-    recordrequest = open('/home/skin/skintosticker/json.txt', 'w')
-    recordrequest.write(json.dumps(request.json))
-    recordrequest.close()
 
     if request.json['id']:
         order_id = request.json['id']
@@ -40,22 +35,27 @@ def receive_skin():
             i += 1
             fname = '%s_%s_%d.png' % (order_id, dt, i)
             properties = item['properties']
-            skin = properties[0]['value'][15:] # properties[0] will be the skin
-            skinlog = open('/home/skin/skintosticker/skinlog.txt', 'w')
-            skinlog.write('%s\n' % (skin))
-            skinlog.close()
-            skinpath = os.path.join(app.config['SKINS_FOLDER'], fname)
 
-            # Back up the original skin
-            fh = open(skinpath, 'wb')
-            writtenfile = fh.write(skin.decode('base64'))
-            fh.close()
+            # Save the preview image
+            character = properties[1]['value'][22:] # properties[1] will be the preview image
+            characterpath = os.path.join(app.config['CHARACTERS_FOLDER'], fname)
+            characterfh = open(characterpath, 'wb')
+            characterfh.write(character.decode('base64'))
+            characterfh.close()
+
+            # Save the original skin
+            skin = properties[0]['value'][22:] # properties[0] will be the skin
+            skinpath = os.path.join(app.config['SKINS_FOLDER'], fname)
+            skinfh = open(skinpath, 'wb')
+            skinfh.write(skin.decode('base64'))
+            skinfh.close()
 
             # Turn the skin into a sticker and save it
+            stickerpath = os.path.join(app.config['STICKERS_FOLDER'], fname)
             skinimg = Image.open(skinpath)
             sticker = SkinToSticker.stickerify(skinimg)
-            stickerpath = os.path.join(app.config['STICKERS_FOLDER'], fname)
             sticker.save(stickerpath,"PNG")
+
     else:
         line_items = 'no line items'
 
@@ -74,6 +74,13 @@ def list_orders():
         order['id'] = metadata[0]
         order['dt'] = metadata[1]
         order['item'] = metadata[2]
+
+        character = Image.open(app.config['CHARACTERS_FOLDER'] + fn)
+        character_output = StringIO()
+        character.save(character_output, format='PNG')
+        character_im_data = character_output.getvalue()
+        character_img_str = 'data:image/png;base64,' + base64.b64encode(character_im_data)
+        order['character'] = character_img_str
 
         skin = Image.open(app.config['SKINS_FOLDER'] + fn)
         skin_output = StringIO()
