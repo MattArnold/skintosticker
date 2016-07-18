@@ -1,6 +1,7 @@
 <div class="container-fluid">
 	<div class="row">
 		<div class="col-md-8">
+		  <div ng-if="empty">Nothing to show.</div>
 			<div ng-repeat="order in orders">
 			  <div class="info_line">
 					<span> <strong>Item</strong> {{order.item}} <strong>from Order</strong> {{order.id}} <strong>placed on</strong> {{order.dt}} </span>
