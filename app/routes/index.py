@@ -1,8 +1,10 @@
 from app import app, SkinToSticker
 from flask import request, json, abort
-import os, base64
+import os, base64, urllib
 from PIL import Image
 from cStringIO import StringIO
+import shippo
+import requests
 
 @app.route('/')
 def root():
@@ -58,6 +60,70 @@ def receive_skin():
 
     else:
         line_items = 'no line items'
+
+    if request.json['shipping_address']:
+        shipping_address = request.json['shipping_address']
+        shippo.api_key = "bf261a7488fe66cc07bc5b02340d1e0e189b4932"
+
+        address_from = {
+            "object_purpose": "PURCHASE",
+            "name": "Thad Johnson",
+            "company": "Player Craft Toys",
+            "street1": "1533 Surrey Ln",
+            "city": "Rochester Hills",
+            "state": "MI",
+            "zip": "48306",
+            "country": "US",
+            "phone": "+1 810 287 3443",
+            "email": "thad@criticalmovesusa.com"
+        }
+
+        address_to = {
+            "object_purpose": "PURCHASE",
+            "name": shipping_address['name'],
+            "company": shipping_address['company'],
+            "street1": shipping_address['address1'],
+            "street2": shipping_address['address2'],
+            "city": shipping_address['city'],
+            "state": shipping_address['province'],
+            "zip": shipping_address['zip'],
+            "country": shipping_address['country_code'],
+            "phone": shipping_address['phone'],
+            "email": "example@example.com",
+            "metadata": ""
+        }
+
+        parcel = {
+            "length": "5",
+            "width": "3",
+            "height": "2",
+            "distance_unit": "in",
+            "weight": "2",
+            "mass_unit": "oz"
+        }
+
+        shipment = {
+            "object_purpose": "PURCHASE",
+            "address_from": address_from,
+            "address_to": address_to,
+            "parcel": parcel
+        }
+
+        transaction = shippo.Transaction.create(
+            shipment = shipment,
+            carrier_account = "143a2a16ee3a4a1a822d8d326df667f3",
+            servicelevel_token = "usps_first",
+            label_file_type = "PNG"
+        )
+
+        label_url = transaction.label_url
+        tracking_number = transaction.tracking_number
+        tracking_url_provider = transaction.tracking_url_provider
+
+        label_file = StringIO(urllib.urlopen(label_url).read())
+        label = Image.open(label_file)
+        label_path = os.path.join(app.config['LABELS_FOLDER'], fname)
+        label.save(label_path,"PNG")
 
     return ('Success', 201)
 
