@@ -1,4 +1,4 @@
-from app import app, SkinToSticker
+from app import app, SkinToSticker, MakePrintable
 from flask import request, json, abort
 import os, base64, urllib
 from PIL import Image
@@ -36,6 +36,7 @@ def receive_skin():
         for item in line_items:
             i += 1
             fname = '%s_%s_%d.png' % (order_id, dt, i)
+            svgname = '%s_%s_%d.svg' % (order_id, dt, i)
             properties = item['properties']
 
             # Save the preview image
@@ -53,10 +54,10 @@ def receive_skin():
             skinfh.close()
 
             # Turn the skin into a sticker and save it
-            stickerpath = os.path.join(app.config['STICKERS_FOLDER'], fname)
+            sticker_path = os.path.join(app.config['STICKERS_FOLDER'], fname)
             skinimg = Image.open(skinpath)
             sticker = SkinToSticker.stickerify(skinimg)
-            sticker.save(stickerpath,"PNG")
+            sticker.save(sticker_path,"PNG")
 
     else:
         line_items = 'no line items'
@@ -125,6 +126,14 @@ def receive_skin():
         label_path = os.path.join(app.config['LABELS_FOLDER'], fname)
         label.save(label_path,"PNG")
 
+    # Create an SVG file to print the character and shipping label
+    # precisely within the vinyl-cutter paths.
+    svg_template = '<?xml version="1.0" encoding="utf-8"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd"><svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="792px" height="612px" viewBox="0 0 792 612" enable-background="new 0 0 792 612" xml:space="preserve"><image overflow="visible" x="18.5" y="55" width="609.572" height="502" xlink:href="' + sticker_path + '"></image><image overflow="visible" x="630" y="198" width="144" height="216" xlink:href="' + label_path + '"></image><text transform="matrix(1 0 0 1 630 30)" font-family="Arial" font-size="12">name:</text><text transform="matrix(1 0 0 1 630 50)" font-family="Arial" font-size="12">princess_flutter</text></svg>'
+    final_path = os.path.join(app.config['FINALS_FOLDER'], svgname)
+    printable_file = open(final_path, 'w')
+    printable_file.write(svg_template)
+    printable_file.close()
+
     return ('Success', 201)
 
 @app.route('/orders', methods=['GET'])
@@ -171,6 +180,17 @@ def list_orders():
             sticker_img_str = failedimg
 
         order['sticker'] = sticker_img_str
+
+        if os.path.isfile(app.config['LABELS_FOLDER'] + fn):
+            label = Image.open(app.config['LABELS_FOLDER'] + fn)
+            label_output = StringIO()
+            label.save(label_output, format='PNG')
+            label_im_data = label_output.getvalue()
+            label_img_str = 'data:image/png;base64,' + base64.b64encode(label_im_data)
+        else:
+            label_img_str = failedimg
+
+        order['label'] = label_img_str
 
         responses.append(order)
     return json.dumps(responses)

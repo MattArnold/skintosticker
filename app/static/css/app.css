@@ -4,6 +4,10 @@ body {
   background-color: #ECF0F1;
 }
 
+.selection {
+  float: left;
+}
+
 .info_line {
   color: #ddd;
   background: #333;
@@ -15,4 +19,17 @@ body {
 
 .sticker_img {
   width: 128px;
+}
+
+@media print {
+  html {
+    visibility: hidden;
+  }
+
+  #print_preview {
+    position: fixed;
+    top: 0;
+    left: 0;
+    visibility: visible;
+  }
 }

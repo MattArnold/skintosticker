@@ -6,4 +6,7 @@ angular.module('skintosticker', ['ngResource', 'ngRoute', 'ui.bootstrap', 'ui.da
         templateUrl: 'views/home/home.html', 
         controller: 'HomeController'})
       .otherwise({redirectTo: '/'});
-  }]);
+  }])
+  .config(function($sceProvider) {
+    $sceProvider.enabled(false);
+  });

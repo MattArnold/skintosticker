@@ -1,17 +1,48 @@
 <div class="container-fluid">
 	<div class="row">
-		<div class="col-md-8">
-		  <div ng-if="empty">Nothing to show.</div>
-			<div ng-repeat="order in orders">
-			  <div class="info_line">
-					<span> <strong>Item</strong> {{order.item}} <strong>from Order</strong> {{order.id}} <strong>placed on</strong> {{order.dt}} </span>
-				</div>
-				<div class="preview_line">
-					<img data-ng-src="{{order.character}}" class="character_img" />
-					<img data-ng-src="{{order.skin}}" class="skin_img" />
-					<img data-ng-src="{{order.sticker}}" class="sticker_img" />
-				</div>
+		<div ng-if="empty" class="col-sm-12">
+			Nothing to show.
+		</div>
+		<div class="col-sm-1">
+			<button type="button" id="print-btn" class="btn btn-primary" name="print" ng-click="print()" >
+				Print
+			</button>
+		</div>
+		<div class="selection" ng-repeat="order in orders" ng-click="makePrintable()">
+			<div class="info_line">
+				{{order.dt}}
+			</div>
+			<div class="preview_line">
+				<img data-ng-src="{{order.character}}" class="character_img" />
 			</div>
 		</div>
+	</div>
+	<div class="row">
+		<svg version="1.1" id="print_preview" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="11in" height="8.5in" viewBox="0 0 792 612" xml:space="preserve">
+			<rect id="background" x="0" y="0" width="792px" height="612px" fill="white"/>
+			<image overflow="visible" x="18.5" y="55" width="609.572" height="502" ng-attr-xlink:href={{printable.sticker}} xlink:href="/">
+			</image>
+			<text transform="matrix(1 0 0 1 630 30)" font-family="Arial" font-size="10">
+				Item {{printable.item}}
+			</text>
+			<text transform="matrix(1 0 0 1 630 45)" font-family="Arial" font-size="10">
+				from order # {{printable.id}}
+			</text>
+			<text transform="matrix(1 0 0 1 630 60)" font-family="Arial" font-size="10">
+				placed on
+			</text>
+			<text transform="matrix(1 0 0 1 630 75)" font-family="Arial" font-size="10">
+				{{printable.dt}}
+			</text>
+			<text transform="matrix(1 0 0 1 630 90)" font-family="Arial" font-size="10">
+				Original skin:
+			</text>
+			<image overflow="visible" x="630" y="100" width="100" height="100" ng-attr-xlink:href={{printable.skin}} xlink:href="/">
+			</image>
+			<image overflow="visible" x="630" y="198" width="144" height="216" ng-attr-xlink:href="{{printable.label}}" xlink:href="/">
+			</image>
+			<image overflow="visible" x="630" y="420" width="128" height="128" ng-attr-xlink:href="{{printable.character}}" xlink:href="/">
+			</image>
+		</svg>
 	</div>
 </div>
