@@ -1,4 +1,4 @@
-from app import app, SkinToSticker, MakePrintable
+from app import app, SkinToSticker
 from flask import request, json, abort
 import os, base64, urllib
 from PIL import Image
