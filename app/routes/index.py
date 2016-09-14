@@ -19,16 +19,18 @@ def receive_skin():
     if not request.json:
         abort(400)
 
+    order_id = 'no order id'
+    dt = 'no datetime'
+    character = app.config['FAILEDIMG']
+    skin = app.config['FAILEDIMG']
+    character_name = 'no character name'
+
     if request.json['id']:
         order_id = request.json['id']
-    else:
-        order_id = 'no order id'
 
     if request.json['created_at']:
         dt = request.json['created_at']
         dt.replace(':', '-')
-    else:
-        dt = 'no datetime'
 
     i = 0
     if request.json['line_items']:
@@ -36,22 +38,37 @@ def receive_skin():
         for item in line_items:
             i += 1
             properties = item['properties']
-            character_name = properties[2]['value'] # properties[2] will be the character's name
+            for property in properties:
+                property_name = property['name']
+                if property['name'] == '_character':
+                    character = property['value'][22:]
+                elif property['name'] == '_skin':
+                    skin = property['value'][22:]
+                elif property['name'] == '_character_name':
+                    character_name = property['value']
+
+            # character_name = properties[2]['value'] # properties[2] will be the character's name
             fname = '%s_%s_%d_%s.png' % (order_id, dt, i, character_name)
             svgname = '%s_%s_%d_%s.svg' % (order_id, dt, i, character_name)
 
             # Save the preview image
-            character = properties[1]['value'][22:] # properties[1] will be the preview image
+            # character = properties[1]['value'][22:] # properties[1] will be the preview image
             characterpath = os.path.join(app.config['CHARACTERS_FOLDER'], fname)
             characterfh = open(characterpath, 'wb')
-            characterfh.write(character.decode('base64'))
+            try:
+                characterfh.write(properties['_character'][22:].decode('base64'))
+            except:
+                characterfh.write(app.config['FAILEDIMG'][22:].decode('base64'))
             characterfh.close()
 
             # Save the original skin
-            skin = properties[0]['value'][22:] # properties[0] will be the skin
+            # skin = properties[0]['value'][22:] # properties[0] will be the skin
             skinpath = os.path.join(app.config['SKINS_FOLDER'], fname)
             skinfh = open(skinpath, 'wb')
-            skinfh.write(skin.decode('base64'))
+            try:
+                skinfh.write(properties['_skin'][22:].decode('base64'))
+            except:
+                skinfh.write(app.config['FAILEDIMG'][22:].decode('base64'))
             skinfh.close()
 
             # Turn the skin into a sticker and save it
