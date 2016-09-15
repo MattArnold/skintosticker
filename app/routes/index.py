@@ -12,12 +12,70 @@ def root():
 
 @app.route('/paths', methods=['GET', 'POST'])
 def getpaths():
-    return "%s %s" % (app.config['SKINS_FOLDER'], app.config['STICKERS_FOLDER'])
+    return "%s %s %s %s" % (app.config['SKINS_FOLDER'], app.config['STICKERS_FOLDER'], app.config['CHARACTERS_FOLDER'], app.config['LABELS_FOLDER'])
+
+@app.route('/skinsfolder', methods=['GET'])
+def list_skin_files():
+    file_name_list = os.listdir(app.config['SKINS_FOLDER'])
+    return json.dumps(file_name_list)
+
+@app.route('/<folder>/<filename>')
+def show_file(folder, filename):
+
+    # HTML template
+    start = "<div style='columns:3'><div>"
+    found = False
+    second = "</div><div><img src='"
+    skin_img_str = app.config['FAILEDIMG']
+    third = "' width='33%' /><div><div style='overflow-wrap: break-word; word-wrap: break-word;'>"
+    fnlist = ""
+    end = "</div></div>"
+
+    # Forgive the user for forgetting to pluralize the URL
+    if folder[-1:] != 's':
+        folder += 's'
+
+    foldername = folder.upper().encode("ascii") + '_FOLDER'
+    try:
+        folderpath = app.config[foldername]
+    except:
+        # No such folder, so just display a list of folders
+        template = "<div>"
+        for config in app.config:
+            if isinstance(config, basestring):
+                if config.endswith('_FOLDER'):
+                    template += "<p><a href='/" + config.lower()[:-7] + '/' + filename + "'>" + config + "</a></p>"
+        template += "</div>"
+        return template
+
+    if filename:
+
+        # Check for the file
+        file_name_list = os.listdir(folderpath)
+        for fn in file_name_list:
+            order = extract_metadata(fn)
+            order_id = str(order['id'])
+            character_name = order['cn']
+            fnlist += "<p><a href='/" + folder + "/" + fn + "'> " + order_id + "</a> " + character_name + "</p>"
+            if fn == filename:
+                found = True
+                foundmsg = "<p>Found: " + filename + "</p>"
+                img = Image.open(folderpath + fn)
+                img_output = StringIO()
+                img.save(img_output, format='PNG')
+                img_data = img_output.getvalue()
+                img_str = 'data:image/png;base64,' + base64.b64encode(img_data)
+
+        if found == True:
+            template = start + foundmsg + second + img_str + third + '</br>' + fnlist + '<p>Encoded image:</p>' + img_str + end
+        else: # Just give them a list of files in the folder they asked for
+            template = start + "<p>Not Found</p>" + second + third + '</br>' + fnlist + end
+        return template
 
 @app.route('/stickerify', methods=['GET', 'POST'])
 def receive_skin():
     if not request.json:
-        abort(400)
+        abort(400,'{"message": "No JSON submitted."}')
 
     order_id = 'no order id'
     dt = 'no datetime'
@@ -69,6 +127,7 @@ def receive_skin():
                 skinfh.write(properties['_skin'][22:].decode('base64'))
             except:
                 skinfh.write(app.config['FAILEDIMG'][22:].decode('base64'))
+                abort(400,'{"message": "Problem with required image."}')
             skinfh.close()
 
             # Turn the skin into a sticker and save it
