@@ -74,6 +74,7 @@ def show_file(folder, filename):
 
 @app.route('/stickerify', methods=['GET', 'POST'])
 def receive_skin():
+    print request.json
     if not request.json:
         abort(400,'{"message": "No JSON submitted."}')
 
